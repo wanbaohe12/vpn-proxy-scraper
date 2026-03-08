@@ -1,0 +1,45 @@
+============================================================
+代理抓取报告 - 20260301_025754
+============================================================
+抓取时间: 2026-03-01 02:57:54
+总代理数: 3
+可用代理: 2
+可用率: 66.7%
+
+代理类型统计:
+  HTTP      :    1 个
+  SOCKS5    :    1 个
+
+最快10个代理:
+ 1. http://192.168.1.1:8080 - 100ms - Test
+ 2. socks5://10.0.0.1:1080 - 200ms - Test
+
+生成的文件:
+  http.txt             - 23 bytes
+  socks5.txt           - 22 bytes
+  all_proxies.txt      - 47 bytes
+  clash.yaml           - 645 bytes
+  shadowsocks.txt      - 156 bytes
+  proxies.json         - 528 bytes
+  ss_subscription.txt  - 156 bytes
+  subscription_base64.txt - 208 bytes
+  subscription_data_url.txt - 231 bytes
+  clash_subscription.yaml - 645 bytes
+  clash_base64.txt     - 820 bytes
+  clash_data_url.txt   - 842 bytes
+
+使用说明:
+  1. HTTP/HTTPS代理: 直接复制到代理软件
+  2. Clash配置: 导入到Clash客户端
+  3. Shadowsocks: 添加到订阅或手动添加
+  4. SOCKS5: 支持SOCKS5的软件可直接使用
+
+订阅链接使用:
+  5. SS订阅链接: 复制 ss_subscription.txt 内容到支持SS的客户端
+  6. Base64订阅: 复制 subscription_base64.txt 内容作为订阅链接
+  7. Data URL: 复制 subscription_data_url.txt 的data: URL
+  8. Clash订阅: 直接导入 clash_subscription.yaml
+
+提示: 使用 start_subscription_server() 启动本地HTTP服务器
+      生成可访问的订阅链接URL
+============================================================

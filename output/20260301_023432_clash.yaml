@@ -1,0 +1,32 @@
+proxies:
+- name: proxy_1
+  type: http
+  server: 192.168.1.1
+  port: 8080
+  tls: false
+  skip-cert-verify: true
+- name: proxy_2
+  type: socks5
+  server: 10.0.0.1
+  port: 1080
+  udp: true
+proxy-groups:
+- name: 自动选择
+  type: url-test
+  proxies:
+  - proxy_1
+  - proxy_2
+  url: http://www.gstatic.com/generate_204
+  interval: 300
+- name: 手动选择
+  type: select
+  proxies:
+  - proxy_1
+  - proxy_2
+rules:
+- DOMAIN-SUFFIX,google.com,自动选择
+- DOMAIN-SUFFIX,youtube.com,自动选择
+- DOMAIN-SUFFIX,twitter.com,自动选择
+- DOMAIN-SUFFIX,facebook.com,自动选择
+- GEOIP,CN,DIRECT
+- MATCH,自动选择

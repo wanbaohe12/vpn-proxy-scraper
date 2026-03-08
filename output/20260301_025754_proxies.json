@@ -1,0 +1,29 @@
+[
+  {
+    "ip": "192.168.1.1",
+    "port": 8080,
+    "protocol": "http",
+    "source": "test",
+    "working": true,
+    "response_time": 100,
+    "country": "Test"
+  },
+  {
+    "ip": "10.0.0.1",
+    "port": 1080,
+    "protocol": "socks5",
+    "source": "test",
+    "working": true,
+    "response_time": 200,
+    "country": "Test"
+  },
+  {
+    "ip": "172.16.0.1",
+    "port": 443,
+    "protocol": "https",
+    "source": "test",
+    "working": false,
+    "response_time": 0,
+    "country": "Test"
+  }
+]

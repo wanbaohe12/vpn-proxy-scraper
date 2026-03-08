@@ -1,0 +1,11 @@
+requests>=2.25.1
+beautifulsoup4>=4.9.3
+urllib3>=1.26.5
+PyInstaller>=4.3
+tkinter
+threading
+queue
+time
+random
+socket
+ssl

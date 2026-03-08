@@ -1,0 +1,41 @@
+proxies:
+- name: proxy_1
+  type: http
+  server: 172.200.72.48
+  port: 80
+  tls: false
+  skip-cert-verify: true
+- name: proxy_2
+  type: http
+  server: 185.85.111.18
+  port: 80
+  tls: false
+  skip-cert-verify: true
+- name: proxy_3
+  type: http
+  server: 121.128.121.134
+  port: 3128
+  tls: false
+  skip-cert-verify: true
+proxy-groups:
+- name: 自动选择
+  type: url-test
+  proxies:
+  - proxy_1
+  - proxy_2
+  - proxy_3
+  url: http://www.gstatic.com/generate_204
+  interval: 300
+- name: 手动选择
+  type: select
+  proxies:
+  - proxy_1
+  - proxy_2
+  - proxy_3
+rules:
+- DOMAIN-SUFFIX,google.com,自动选择
+- DOMAIN-SUFFIX,youtube.com,自动选择
+- DOMAIN-SUFFIX,twitter.com,自动选择
+- DOMAIN-SUFFIX,facebook.com,自动选择
+- GEOIP,CN,DIRECT
+- MATCH,自动选择

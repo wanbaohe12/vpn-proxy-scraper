@@ -1,0 +1,23 @@
+# VPN代理抓取工具配置
+timeout: 10
+max_workers: 30
+pages_per_source: 3
+
+# 代理源配置
+sources:
+  kuaidaili: true
+  89ip: true
+  ip3366: true
+  zdaye: true
+  foreign: false
+
+# 输出格式
+output_formats:
+  http: true
+  socks5: true
+  shadowsocks: true
+  clash: true
+  v2ray: true
+  proxifier: true
+  burpsuite: true
+  foxyproxy: true

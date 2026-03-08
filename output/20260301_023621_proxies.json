@@ -1,0 +1,53 @@
+[
+  {
+    "ip": "172.200.72.48",
+    "port": "80",
+    "country": "GB",
+    "region": "Boydton",
+    "anonymity": "elite",
+    "protocol": "http",
+    "type": "http",
+    "source": "geonode.com",
+    "added_at": "2026-03-01T02:35:27.417244",
+    "speed": 29678,
+    "uptime": "0%",
+    "working": true,
+    "response_time": 1547.72,
+    "last_checked": "2026-03-01T02:35:39.371491",
+    "score": 20
+  },
+  {
+    "ip": "185.85.111.18",
+    "port": "80",
+    "country": "CH",
+    "region": "Tann",
+    "anonymity": "elite",
+    "protocol": "http",
+    "type": "http",
+    "source": "geonode.com",
+    "added_at": "2026-03-01T02:35:27.417371",
+    "speed": 19577,
+    "uptime": "0%",
+    "working": true,
+    "response_time": 7661.15,
+    "last_checked": "2026-03-01T02:35:45.634325",
+    "score": 10
+  },
+  {
+    "ip": "121.128.121.134",
+    "port": "3128",
+    "country": "KR",
+    "region": "Ansan-si",
+    "anonymity": "elite",
+    "protocol": "http",
+    "type": "http",
+    "source": "geonode.com",
+    "added_at": "2026-03-01T02:35:27.417449",
+    "speed": 33498,
+    "uptime": "0%",
+    "working": true,
+    "response_time": 16144.35,
+    "last_checked": "2026-03-01T02:35:57.405498",
+    "score": 10
+  }
+]

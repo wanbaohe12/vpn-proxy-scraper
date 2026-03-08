@@ -1,0 +1,33 @@
+{
+  "proxy_sources": {
+    "kuaidaili": true,
+    "89ip": true,
+    "ip3366": true,
+    "proxy_list_download": true,
+    "geonode": true
+  },
+  "test_settings": {
+    "timeout": 10,
+    "max_workers": 50,
+    "test_urls": [
+      "http://www.baidu.com",
+      "http://www.qq.com",
+      "http://www.sohu.com"
+    ]
+  },
+  "output_settings": {
+    "default_format": "all",
+    "auto_save": true,
+    "output_dir": "output",
+    "save_json": true,
+    "save_txt": true,
+    "save_yaml": true
+  },
+  "gui_settings": {
+    "window_width": 1200,
+    "window_height": 800,
+    "theme": "default",
+    "language": "zh_CN",
+    "auto_scroll_logs": true
+  }
+}
