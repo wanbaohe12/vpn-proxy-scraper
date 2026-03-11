@@ -34,17 +34,28 @@ class OutputFormatter:
         return "\n".join(lines)
     
     @staticmethod
-    def format_shadowsocks(proxies: List[Dict]) -> str:
-        """Shadowsocks格式输出 (base64编码)"""
+    def format_shadowsocks(proxies: List[Dict], password: str = None, method: str = 'aes-256-gcm') -> str:
+        """Shadowsocks格式输出 (base64编码)
+        
+        Args:
+            proxies: 代理列表
+            password: Shadowsocks密码，如不指定则生成随机密码
+            method: 加密方法，默认aes-256-gcm
+        """
+        import secrets
+        
+        # 如果没有指定密码，生成随机密码
+        if password is None:
+            password = secrets.token_urlsafe(16)
+        
         configs = []
         for proxy in proxies:
             if proxy.get('working'):
-                # Shadowsocks需要密码，这里使用默认值
                 config = {
                     "server": proxy['ip'],
                     "server_port": int(proxy['port']),
-                    "password": "password123",  # 默认密码
-                    "method": "aes-256-gcm",
+                    "password": password,
+                    "method": method,
                     "remarks": f"{proxy['ip']}:{proxy['port']} - {proxy.get('score', 0)}分"
                 }
                 configs.append(config)
@@ -110,7 +121,24 @@ class OutputFormatter:
                 proxy_name = f"proxy_{i+1}"
                 
                 # 根据代理类型创建配置
-                if proxy.get('protocol') in ['socks', 'socks5']:
+                protocol = proxy.get('protocol', 'http')
+                if protocol == 'socks4':
+                    proxy_config = {
+                        "name": proxy_name,
+                        "type": "socks4",
+                        "server": proxy['ip'],
+                        "port": int(proxy['port'])
+                    }
+                elif protocol == 'socks5':
+                    proxy_config = {
+                        "name": proxy_name,
+                        "type": "socks5",
+                        "server": proxy['ip'],
+                        "port": int(proxy['port']),
+                        "udp": True
+                    }
+                elif protocol in ['socks']:
+                    # 兼容旧数据，socks默认按socks5处理
                     proxy_config = {
                         "name": proxy_name,
                         "type": "socks5",
@@ -147,8 +175,19 @@ class OutputFormatter:
         return yaml.dump(clash_config, allow_unicode=True, sort_keys=False)
     
     @staticmethod
-    def format_v2ray(proxies: List[Dict]) -> str:
-        """V2Ray格式输出"""
+    def format_v2ray(proxies: List[Dict], uuid: str = None) -> str:
+        """V2Ray格式输出
+        
+        Args:
+            proxies: 代理列表
+            uuid: V2Ray UUID，如不指定则生成随机UUID
+        """
+        import uuid as uuid_module
+        
+        # 如果没有指定UUID，生成随机UUID
+        if uuid is None:
+            uuid = str(uuid_module.uuid4())
+        
         v2ray_configs = []
         
         for proxy in proxies:
@@ -159,7 +198,7 @@ class OutputFormatter:
                     "ps": f"{proxy['ip']}:{proxy['port']} - {proxy.get('score', 0)}分",
                     "add": proxy['ip'],
                     "port": proxy['port'],
-                    "id": "b831381d-6324-4d53-ad4f-8cda48b30811",  # 默认UUID
+                    "id": uuid,
                     "aid": "0",
                     "net": "tcp",
                     "type": "none",

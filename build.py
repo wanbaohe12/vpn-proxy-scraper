@@ -270,31 +270,48 @@ def main():
         
         # 显示构建结果
         dist_dir = Path("dist")
+        root_exe_path = Path("VPN代理抓取工具.exe")
+        
         if dist_dir.exists():
             exe_files = list(dist_dir.glob("*.exe"))
             if exe_files:
                 exe_path = exe_files[0]
-                print(f"生成的可执行文件: {exe_path}")
-                print(f"文件大小: {exe_path.stat().st_size / (1024*1024):.2f} MB")
+                print(f"✓ 生成的可执行文件: {exe_path}")
+                print(f"  文件大小: {exe_path.stat().st_size / (1024*1024):.2f} MB")
                 
-                # 复制到根目录
-                target_path = Path("VPN代理抓取工具.exe")
-                shutil.copy(exe_path, target_path)
-                print(f"已复制到: {target_path}")
+                # 复制到根目录（项目根目录）
+                try:
+                    shutil.copy(exe_path, root_exe_path)
+                    print(f"\n✓ 已复制到项目根目录: {root_exe_path.absolute()}")
+                    print(f"  你可以直接双击运行这个文件！")
+                except Exception as e:
+                    print(f"\n⚠ 复制到根目录失败: {e}")
+                    print(f"  请手动从 {exe_path} 复制")
                 
-                print("\n使用说明:")
-                print("1. 双击 'VPN代理抓取工具.exe' 运行程序")
-                print("2. 程序会自动创建 output 目录保存结果")
-                print("3. 界面操作: 抓取 -> 测试 -> 导出")
+                print("\n" + "=" * 60)
+                print("📦 打包完成！")
+                print("=" * 60)
+                print(f"\n🎯 快速开始:")
+                print(f"   双击运行: {root_exe_path.name}")
+                print(f"   完整路径: {root_exe_path.absolute()}")
+                
+                print(f"\n📁 输出目录:")
+                print(f"   程序会在 output 目录保存抓取结果")
+                
+                print(f"\n📝 使用步骤:")
+                print("   1. 双击运行程序")
+                print("   2. 点击'开始抓取'获取代理")
+                print("   3. 点击'测试代理'验证可用性")
+                print("   4. 点击'导出代理'保存结果")
                 
                 # 打开目录
-                choice = input("\n是否打开输出目录？(y/n): ")
+                choice = input(f"\n是否打开程序所在目录？(y/n): ")
                 if choice.lower() == 'y':
-                    os.startfile(dist_dir)
+                    os.startfile(root_exe_path.parent)
             else:
-                print("未找到生成的exe文件")
+                print("✗ 未找到生成的exe文件")
         else:
-            print("dist目录不存在，构建可能失败")
+            print("✗ dist目录不存在，构建可能失败")
     else:
         print("\n构建失败！")
         print("请检查错误信息并重试")

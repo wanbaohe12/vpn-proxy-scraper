@@ -324,8 +324,13 @@ class ProxyManager:
     
     # ==================== 代理测试 ====================
     
-    def test_proxy(self, proxy: Dict) -> Optional[Dict]:
-        """测试单个代理"""
+    def test_proxy(self, proxy: Dict, test_urls: List[str] = None) -> Optional[Dict]:
+        """测试单个代理
+        
+        Args:
+            proxy: 代理字典
+            test_urls: 自定义测试URL列表，如不指定则使用默认列表
+        """
         try:
             proxy_url = f"{proxy['protocol']}://{proxy['ip']}:{proxy['port']}"
             proxies_config = {
@@ -333,12 +338,16 @@ class ProxyManager:
                 'https': proxy_url
             }
             
-            # 测试1: 连接速度
-            test_urls = [
-                'http://www.baidu.com',
-                'http://www.qq.com',
-                'http://www.sohu.com',
-            ]
+            # 测试URL列表 - 包含国内外多个站点，提高测试成功率
+            if test_urls is None:
+                test_urls = [
+                    'http://httpbin.org/ip',  # 国外API，返回访问者IP
+                    'http://www.baidu.com',
+                    'http://www.qq.com',
+                    'http://www.sohu.com',
+                    'http://www.163.com',
+                    'http://www.taobao.com',
+                ]
             
             for test_url in test_urls:
                 try:
@@ -352,32 +361,29 @@ class ProxyManager:
                     )
                     elapsed = time.time() - start_time
                     
-                    if response.status_code == 200 and len(response.text) > 1000:
+                    # 对于httpbin.org/ip，检查返回内容是否包含代理IP
+                    if 'httpbin.org' in test_url:
+                        if response.status_code == 200:
+                            try:
+                                data = response.json()
+                                origin_ip = data.get('origin', '')
+                                # 如果返回的IP不是代理IP，说明代理可能无效
+                                if origin_ip and proxy['ip'] not in origin_ip:
+                                    logger.debug(f"代理 {proxy['ip']} 可能无效，返回IP: {origin_ip}")
+                            except:
+                                pass
+                            # 只要能访问httpbin.org就认为代理可用
+                            proxy['working'] = True
+                            proxy['response_time'] = round(elapsed * 1000, 2)
+                            proxy['last_checked'] = datetime.now().isoformat()
+                            proxy['score'] = self._calculate_score(proxy)
+                            return proxy
+                    elif response.status_code == 200 and len(response.text) > 100:
                         # 测试通过
                         proxy['working'] = True
                         proxy['response_time'] = round(elapsed * 1000, 2)  # 毫秒
                         proxy['last_checked'] = datetime.now().isoformat()
-                        
-                        # 计算评分
-                        score = 0
-                        if proxy['response_time'] < 1000:
-                            score += 40
-                        elif proxy['response_time'] < 3000:
-                            score += 20
-                        else:
-                            score += 10
-                        
-                        if proxy['anonymity'] == '高匿':
-                            score += 30
-                        elif proxy['anonymity'] == '匿名':
-                            score += 20
-                        elif proxy['anonymity'] == '透明':
-                            score += 10
-                        
-                        if proxy['protocol'] == 'https':
-                            score += 20
-                        
-                        proxy['score'] = score
+                        proxy['score'] = self._calculate_score(proxy)
                         return proxy
                         
                 except Exception:
@@ -393,6 +399,43 @@ class ProxyManager:
             proxy['error'] = str(e)
             proxy['last_checked'] = datetime.now().isoformat()
             return proxy
+    
+    def _calculate_score(self, proxy: Dict) -> int:
+        """计算代理评分"""
+        score = 0
+        
+        # 响应时间评分
+        response_time = proxy.get('response_time', 9999)
+        if response_time < 500:
+            score += 50
+        elif response_time < 1000:
+            score += 40
+        elif response_time < 2000:
+            score += 30
+        elif response_time < 3000:
+            score += 20
+        else:
+            score += 10
+        
+        # 匿名度评分
+        anonymity = proxy.get('anonymity', '')
+        if anonymity == '高匿' or anonymity == 'elite':
+            score += 30
+        elif anonymity == '匿名' or anonymity == 'anonymous':
+            score += 20
+        elif anonymity == '透明' or anonymity == 'transparent':
+            score += 10
+        
+        # 协议评分
+        protocol = proxy.get('protocol', 'http')
+        if protocol == 'https':
+            score += 20
+        elif protocol == 'socks5':
+            score += 15
+        elif protocol == 'socks4':
+            score += 10
+        
+        return score
     
     def test_proxies_batch(self, proxies: List[Dict], progress_callback=None) -> Tuple[List[Dict], List[Dict]]:
         """批量测试代理"""
@@ -557,7 +600,14 @@ class ProxyManager:
             if proxy.get('working'):
                 proxy_name = f"proxy_{i+1}"
                 
-                if proxy['protocol'] in ['socks4', 'socks5']:
+                if proxy['protocol'] == 'socks4':
+                    proxy_config = {
+                        'name': proxy_name,
+                        'type': 'socks4',
+                        'server': proxy['ip'],
+                        'port': int(proxy['port'])
+                    }
+                elif proxy['protocol'] == 'socks5':
                     proxy_config = {
                         'name': proxy_name,
                         'type': 'socks5',
@@ -582,19 +632,29 @@ class ProxyManager:
         return yaml.dump(clash_config, allow_unicode=True, sort_keys=False)
     
     @staticmethod
-    def format_for_shadowsocks(proxies: List[Dict]) -> str:
-        """Shadowsocks订阅链接格式"""
+    def format_for_shadowsocks(proxies: List[Dict], password: str = None, method: str = 'aes-256-gcm') -> str:
+        """Shadowsocks订阅链接格式
+        
+        Args:
+            proxies: 代理列表
+            password: Shadowsocks密码，如不指定则生成随机密码
+            method: 加密方法，默认aes-256-gcm
+        """
         import base64
+        import secrets
+        
+        # 如果没有指定密码，生成随机密码
+        if password is None:
+            password = secrets.token_urlsafe(16)
         
         ss_links = []
         for proxy in proxies:
             if proxy.get('working'):
-                # 简化配置
                 config = {
                     'server': proxy['ip'],
                     'server_port': int(proxy['port']),
-                    'password': 'password123',  # 默认密码
-                    'method': 'aes-256-gcm',
+                    'password': password,
+                    'method': method,
                     'remarks': f"{proxy['ip']}:{proxy['port']}"
                 }
                 
@@ -625,26 +685,33 @@ class ProxyManager:
     # ==================== 订阅链接功能 ====================
     
     @staticmethod
-    def generate_ss_subscription_links(proxies: List[Dict]) -> Dict[str, str]:
-        """生成Shadowsocks订阅链接"""
+    def generate_ss_subscription_links(proxies: List[Dict], password: str = None, method: str = 'aes-256-gcm') -> Dict[str, str]:
+        """生成Shadowsocks订阅链接
+        
+        Args:
+            proxies: 代理列表
+            password: Shadowsocks密码，如不指定则生成随机密码
+            method: 加密方法，默认aes-256-gcm
+        """
         import base64
+        import secrets
+        
+        # 如果没有指定密码，生成随机密码
+        if password is None:
+            password = secrets.token_urlsafe(16)
         
         subscription_links = {
             "raw_links": [],      # 原始SS链接列表
             "base64_encoded": "", # base64编码的订阅内容
             "data_url": "",       # data: URL格式
-            "subscription_url": "" # 完整订阅链接（如果启动服务器）
+            "subscription_url": "", # 完整订阅链接（如果启动服务器）
+            "password": password  # 返回使用的密码，方便用户记录
         }
         
         # 生成原始SS链接
         ss_links = []
         for proxy in proxies:
             if proxy.get('working') and proxy['protocol'] in ['http', 'https', 'socks4', 'socks5']:
-                # 转换为SS格式需要密码和加密方法
-                # 使用默认配置
-                password = "openclaw123"
-                method = "aes-256-gcm"
-                
                 # SS URI格式: ss://method:password@host:port#remark
                 ss_uri = f"{method}:{password}@{proxy['ip']}:{proxy['port']}#{proxy['ip']}:{proxy['port']}"
                 encoded_uri = base64.b64encode(ss_uri.encode()).decode()

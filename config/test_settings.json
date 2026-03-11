@@ -1,0 +1,54 @@
+{
+  "timeout": 10,
+  "max_workers": 50,
+  "test_urls": [
+    "http://httpbin.org/ip",
+    "http://www.baidu.com",
+    "http://www.qq.com",
+    "http://www.sohu.com",
+    "http://www.163.com"
+  ],
+  "sources": {
+    "kuaidaili": {
+      "enabled": true,
+      "pages": 5
+    },
+    "ip89": {
+      "enabled": true,
+      "pages": 10
+    },
+    "ip3366": {
+      "enabled": true,
+      "pages": 5
+    },
+    "proxy_list_download": {
+      "enabled": true
+    },
+    "geonode": {
+      "enabled": true
+    }
+  },
+  "shadowsocks": {
+    "method": "aes-256-gcm",
+    "password": null
+  },
+  "v2ray": {
+    "uuid": null
+  },
+  "output": {
+    "default_dir": "output",
+    "formats": [
+      "http",
+      "https",
+      "socks5",
+      "clash",
+      "shadowsocks",
+      "json"
+    ]
+  },
+  "ui": {
+    "window_width": 1200,
+    "window_height": 800,
+    "theme": "default"
+  }
+}

@@ -17,9 +17,10 @@ def check_dependencies():
     # 包名到导入名的映射
     package_map = {
         'requests': 'requests',
-        'beautifulsoup4': 'bs4',  # beautifulsoup4的导入名是bs4
+        'beautifulsoup4': 'bs4',
         'lxml': 'lxml',
-        'PyYAML': 'yaml',  # PyYAML的导入名是yaml
+        'PyYAML': 'yaml',
+        'PyQt5': 'PyQt5.QtWidgets',
     }
     
     missing = []
@@ -44,16 +45,16 @@ def install_dependencies():
     
     requirements = [
         "requests>=2.31.0",
-        "beautifulsoup4>=4.12.0", 
+        "beautifulsoup4>=4.12.0",
         "lxml>=4.9.0",
         "PyYAML>=6.0",
-        "tkinter"  # tkinter通常是Python内置的
+        "PyQt5>=5.15.0",
     ]
     
     for req in requirements:
         try:
             subprocess.check_call([
-                sys.executable, "-m", "pip", "install", 
+                sys.executable, "-m", "pip", "install",
                 req, "-i", mirror, "--trusted-host", "pypi.tuna.tsinghua.edu.cn"
             ])
             print(f"✓ 已安装: {req}")
@@ -62,12 +63,19 @@ def install_dependencies():
     
     print("依赖安装完成！")
 
+def setup_directories():
+    """创建必要的目录"""
+    dirs = ['output', 'data', 'config', 'logs']
+    for d in dirs:
+        os.makedirs(d, exist_ok=True)
+
 def run_gui():
     """运行GUI主程序"""
     try:
-        # 导入GUI模块 - 修正导入路径
+        # 导入GUI模块
         from ui.main_window import ProxyScraperGUI
         from PyQt5.QtWidgets import QApplication
+        from config_manager import get_config
         
         print("启动图形界面...")
         print("提示：")
@@ -77,8 +85,11 @@ def run_gui():
         print("=" * 60)
         
         # 创建必要的目录
-        os.makedirs('output', exist_ok=True)
-        os.makedirs('data', exist_ok=True)
+        setup_directories()
+        
+        # 加载配置
+        config = get_config()
+        print(f"配置加载完成: {config.config_file}")
         
         # 创建QApplication实例
         app = QApplication(sys.argv)
@@ -95,34 +106,92 @@ def run_gui():
         traceback.print_exc()
         input("按回车键退出...")
 
+def run_cli():
+    """运行命令行版本"""
+    from proxy_manager import ProxyManager
+    from config_manager import get_config
+    import json
+    
+    print("=" * 60)
+    print("VPN代理抓取工具 - 命令行模式")
+    print("=" * 60)
+    
+    # 加载配置
+    config = get_config()
+    
+    # 创建管理器
+    timeout = config.get_timeout()
+    max_workers = config.get_max_workers()
+    
+    print(f"超时时间: {timeout}s")
+    print(f"最大线程数: {max_workers}")
+    print("-" * 60)
+    
+    manager = ProxyManager(timeout=timeout, max_workers=max_workers)
+    
+    # 运行完整流程
+    def progress_callback(current, total, success, failed, msg):
+        if total > 0:
+            percent = int(current / total * 100)
+            print(f"\r[{percent:3d}%] {msg[:50]}", end='', flush=True)
+    
+    result = manager.run_full_process(test_proxies=True, progress_callback=progress_callback)
+    print()  # 换行
+    
+    print("-" * 60)
+    print(f"抓取完成!")
+    print(f"  总代理数: {result['total_scraped']}")
+    print(f"  可用代理: {result['total_working']}")
+    print(f"  失败代理: {result['total_failed']}")
+    
+    if result['working_proxies']:
+        # 导出结果
+        saved_files = manager.export_proxies(result['working_proxies'])
+        print("-" * 60)
+        print("生成的文件:")
+        for filename, filepath in saved_files.items():
+            print(f"  • {filename}")
+    
+    print("=" * 60)
+
 def main():
     """主函数"""
     print("=" * 60)
-    print("VPN代理抓取工具 v2.0")
+    print("VPN代理抓取工具 v2.1")
     print("=" * 60)
     
-    # 检查依赖
-    missing = check_dependencies()
-    if missing:
-        print(f"缺少依赖: {', '.join(missing)}")
-        print("正在自动安装依赖...")
-        install_dependencies()
-        
-        # 重新检查
+    # 检查命令行参数
+    if len(sys.argv) > 1 and sys.argv[1] == '--cli':
+        # 命令行模式
         missing = check_dependencies()
         if missing:
-            print(f"安装后仍缺少依赖: {', '.join(missing)}")
-            print("请手动安装: pip install -r requirements.txt")
-            print("程序将在5秒后退出...")
-            import time
-            time.sleep(5)
+            print(f"缺少依赖: {', '.join(missing)}")
+            print("请运行: pip install -r requirements.txt")
             return
         
-        print("依赖安装完成，重新启动程序...")
-        # 重新导入模块并运行
-        return run_gui()
-    
-    run_gui()
+        setup_directories()
+        run_cli()
+    else:
+        # GUI模式
+        missing = check_dependencies()
+        if missing:
+            print(f"缺少依赖: {', '.join(missing)}")
+            print("正在自动安装依赖...")
+            install_dependencies()
+            
+            # 重新检查
+            missing = check_dependencies()
+            if missing:
+                print(f"安装后仍缺少依赖: {', '.join(missing)}")
+                print("请手动安装: pip install -r requirements.txt")
+                print("程序将在5秒后退出...")
+                import time
+                time.sleep(5)
+                return
+            
+            print("依赖安装完成，重新启动程序...")
+        
+        run_gui()
 
 if __name__ == '__main__':
     main()

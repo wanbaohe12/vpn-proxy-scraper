@@ -1,11 +1,7 @@
 requests>=2.25.1
 beautifulsoup4>=4.9.3
 urllib3>=1.26.5
+PyYAML>=6.0
 PyInstaller>=4.3
-tkinter
-threading
-queue
-time
-random
-socket
-ssl
+PyQt5>=5.15.0
+lxml>=4.9.0
